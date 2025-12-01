@@ -1,0 +1,4 @@
+name: Multiverse-InventoriesImporter
+version: '1.0-SNAPSHOT'
+main: org.mvplugins.multiverse.inventoriesimporter.multiverseInventoriesImporter.MultiverseInventoriesImporter
+api-version: '1.18'
