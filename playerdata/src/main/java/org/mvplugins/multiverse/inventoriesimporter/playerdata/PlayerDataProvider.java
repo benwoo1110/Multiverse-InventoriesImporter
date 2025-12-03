@@ -26,12 +26,10 @@ public interface PlayerDataProvider {
         static {
             @NotNull String minecraftVersionString = Bukkit.getServer().getMinecraftVersion();
             MinecraftVersion minecraftVersion = MinecraftVersion.fromString(minecraftVersionString);
-            System.out.println("Minecraft version: " + minecraftVersionString);
             String targetVersionPackage = VERSION_MAPPING
                     .filter((range, s) -> range.includes(minecraftVersion))
                     .head()
                     ._2();
-            System.out.println("Target PlayerDataProvider package: " + targetVersionPackage);
             try {
                 INSTANCE = Class
                         .forName("org.mvplugins.multiverse.inventoriesimporter.playerdata_"

@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     `my-conventions`
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.19" apply false
@@ -6,6 +8,7 @@ plugins {
 
 group = "org.mvplugins.multiverse.inventoriesimporter"
 version = "1.0-SNAPSHOT"
+description = "Multiverse-InventoriesImporter"
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
@@ -15,6 +18,20 @@ dependencies {
     runtimeOnly(project(":playerdata_1_20_2", configuration = "reobf"))
     runtimeOnly(project(":playerdata_1_21_4", configuration = "reobf"))
     runtimeOnly(project(":playerdata_1_21_10", configuration = "reobf"))
+
+    compileOnly("org.glassfish.hk2:hk2-api:3.1.1") {
+        exclude(group = "*", module = "*")
+    }
+    annotationProcessor("org.glassfish.hk2:hk2-metadata-generator:3.1.1")
+    testAnnotationProcessor("org.glassfish.hk2:hk2-metadata-generator:3.1.1")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    doFirst {
+        this@configureEach.options.compilerArgs.add(
+            "-Aorg.glassfish.hk2.metadata.location=META-INF/hk2-locator/${project.description}"
+        )
+    }
 }
 
 tasks.assemble {

@@ -1,22 +1,25 @@
 package org.mvplugins.multiverse.inventoriesimporter.multiverseInventoriesImporter;
 
-import org.bukkit.plugin.java.JavaPlugin;
-import org.mvplugins.multiverse.core.MultiverseCoreApi;
-import org.mvplugins.multiverse.core.command.MVCommandManager;
-import org.mvplugins.multiverse.inventoriesimporter.multiverseInventoriesImporter.commands.PlayerdataImportCommand;
+import org.jvnet.hk2.annotations.Service;
+import org.mvplugins.multiverse.core.module.MultiverseModule;
+import org.mvplugins.multiverse.inventoriesimporter.multiverseInventoriesImporter.commands.MVInvImporterCommand;
 
-public final class MultiverseInventoriesImporter extends JavaPlugin {
+@Service
+public final class MultiverseInventoriesImporter extends MultiverseModule {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
-        MultiverseCoreApi mvCoreApi = MultiverseCoreApi.get();
-        MVCommandManager commandManager = mvCoreApi.getServiceLocator().getService(MVCommandManager.class);
-        commandManager.registerCommand(new PlayerdataImportCommand());
+        initializeDependencyInjection(new MultiverseInventoriesImporterPluginBinder(this));
+        registerCommands(MVInvImporterCommand.class);
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+
+    }
+
+    @Override
+    public double getTargetCoreVersion() {
+        return 5.2;
     }
 }
