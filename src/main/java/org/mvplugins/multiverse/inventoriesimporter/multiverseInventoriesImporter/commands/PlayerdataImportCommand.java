@@ -10,6 +10,7 @@ import org.mvplugins.multiverse.external.acf.commands.annotation.CommandPermissi
 import org.mvplugins.multiverse.external.acf.commands.annotation.Description;
 import org.mvplugins.multiverse.external.acf.commands.annotation.Subcommand;
 import org.mvplugins.multiverse.external.acf.commands.annotation.Syntax;
+import org.mvplugins.multiverse.external.jakarta.inject.Inject;
 import org.mvplugins.multiverse.inventories.profile.ProfileDataSource;
 import org.mvplugins.multiverse.inventories.profile.data.ProfileData;
 import org.mvplugins.multiverse.inventories.profile.group.WorldGroup;
@@ -21,7 +22,6 @@ import org.mvplugins.multiverse.inventories.profile.key.ProfileTypes;
 import org.mvplugins.multiverse.inventoriesimporter.playerdata.PlayerDataImporter;
 import org.mvplugins.multiverse.inventoriesimporter.playerdata.PlayerDataProvider;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;

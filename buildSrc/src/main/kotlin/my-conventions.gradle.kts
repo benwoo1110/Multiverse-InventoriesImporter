@@ -18,7 +18,7 @@ repositories {
     mavenCentral()
     gradlePluginPortal()
     maven {
-        name = "onarandombox"
+        name = "multiverse"
         url = uri("https://repo.onarandombox.com/multiverse-releases/")
     }
     maven {

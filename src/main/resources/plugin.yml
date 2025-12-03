@@ -1,6 +1,6 @@
 name: Multiverse-InventoriesImporter
-version: '1.0-SNAPSHOT'
+version: ${version}
 main: org.mvplugins.multiverse.inventoriesimporter.multiverseInventoriesImporter.MultiverseInventoriesImporter
 api-version: '1.18'
-depends: [Multiverse-Inventories]
+depend: ['Multiverse-Core', 'Multiverse-Inventories']
 authors: [benwoo1110]
