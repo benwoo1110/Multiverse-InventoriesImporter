@@ -1,5 +1,6 @@
 package org.mvplugins.multiverse.inventoriesimporter.playerdata_1_21_10;
 
+import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtAccounter;
@@ -33,7 +34,10 @@ public class PlayerDataImporter_1_21_10 implements PlayerDataImporter {
         return Try.of(() -> NbtIo.readCompressed(playerDataFile.toPath(), NbtAccounter.unlimitedHeap()))
                 .mapTry(compoundTag -> {
                     int dataVersion = compoundTag.getIntOr("DataVersion", -1);
-                    return DataFixTypes.PLAYER.updateToCurrentVersion(DataFixers.getDataFixer(), compoundTag, dataVersion);
+                    CompoundTag upgradedTag = DataFixTypes.PLAYER.updateToCurrentVersion(DataFixers.getDataFixer(), compoundTag, dataVersion);
+                    upgradedTag.putInt("DataVersion", SharedConstants.getCurrentVersion().dataVersion().version());
+                    InvLogging.finest("Upgraded player data from version %d to %d", dataVersion, upgradedTag.getIntOr("DataVersion", -1));
+                    return upgradedTag;
                 });
     }
 

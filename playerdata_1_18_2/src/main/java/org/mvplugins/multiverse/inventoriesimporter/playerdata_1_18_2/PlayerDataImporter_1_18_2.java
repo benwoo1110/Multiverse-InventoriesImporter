@@ -38,15 +38,20 @@ public class PlayerDataImporter_1_18_2 implements PlayerDataImporter {
         return Try.of(() -> NbtIo.readCompressed(playerDataFile))
                 .mapTry(compoundTag -> {
                     int dataVersion = compoundTag.getInt("DataVersion");
-                    return DataFixers.getDataFixer()
+                    Tag upgradedTag = DataFixers.getDataFixer()
                             .update(
                                     DataFixTypes.PLAYER.getType(),
                                     new Dynamic<>(NbtOps.INSTANCE, compoundTag),
                                     dataVersion,
                                     SharedConstants.getCurrentVersion().getDataVersion().getVersion())
                             .getValue();
-                })
-                .mapTry(tag -> (CompoundTag) tag);
+                    if (!(upgradedTag instanceof CompoundTag upgradedCompoundTag)) {
+                        throw new IllegalStateException("Upgraded player data is not a CompoundTag");
+                    }
+                    upgradedCompoundTag.putInt("DataVersion", SharedConstants.getCurrentVersion().getDataVersion().getVersion());
+                    InvLogging.finest("Upgraded player data from version %d to %d", dataVersion, upgradedCompoundTag.getInt("DataVersion"));
+                    return upgradedCompoundTag;
+                });
     }
 
     private Try<ProfileData> convertToProfileData(CompoundTag playerData) {

@@ -1,18 +1,12 @@
 package org.mvplugins.multiverse.inventoriesimporter.playerdata_1_20_2;
 
-import com.mojang.serialization.Dynamic;
-import com.mojang.serialization.DynamicOps;
+import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.util.datafix.DataFixers;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraft.world.level.storage.PlayerDataStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.mvplugins.multiverse.external.vavr.control.Try;
@@ -41,7 +35,10 @@ public class PlayerDataImporter_1_20_2 implements PlayerDataImporter {
         return Try.of(() -> NbtIo.readCompressed(playerDataFile))
                 .mapTry(compoundTag -> {
                     int dataVersion = compoundTag.getInt("DataVersion");
-                    return DataFixTypes.PLAYER.updateToCurrentVersion(DataFixers.getDataFixer(), compoundTag, dataVersion);
+                    CompoundTag upgradedTag = DataFixTypes.PLAYER.updateToCurrentVersion(DataFixers.getDataFixer(), compoundTag, dataVersion);
+                    upgradedTag.putInt("DataVersion", SharedConstants.getCurrentVersion().getDataVersion().getVersion());
+                    InvLogging.finest("Upgraded player data from version %d to %d", dataVersion, upgradedTag.getInt("DataVersion"));
+                    return upgradedTag;
                 });
     }
 
