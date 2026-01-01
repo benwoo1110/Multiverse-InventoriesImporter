@@ -11,6 +11,7 @@ import org.mvplugins.multiverse.external.acf.commands.annotation.Description;
 import org.mvplugins.multiverse.external.acf.commands.annotation.Subcommand;
 import org.mvplugins.multiverse.external.acf.commands.annotation.Syntax;
 import org.mvplugins.multiverse.external.jakarta.inject.Inject;
+import org.mvplugins.multiverse.external.vavr.control.Try;
 import org.mvplugins.multiverse.inventories.profile.ProfileDataSource;
 import org.mvplugins.multiverse.inventories.profile.data.ProfileData;
 import org.mvplugins.multiverse.inventories.profile.group.WorldGroup;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 final class PlayerdataImportCommand extends MVInvImporterCommand {
@@ -64,17 +66,33 @@ final class PlayerdataImportCommand extends MVInvImporterCommand {
             return;
         }
 
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger errorCount = new AtomicInteger();
         for (File playerDataFile : files) {
             if (!Files.getFileExtension(playerDataFile.getName()).equals("dat")) {
                 continue;
             }
-            UUID playerUUID = UUID.fromString(Files.getNameWithoutExtension(playerDataFile.getName()));
-            playerDataExtractor.readPlayerDataFromFile(playerDataFile)
-                    .mapTry(profileData -> applyToRelevantProfiles(world, profileData, playerUUID, groupsForWorld))
+            Try.of(() -> UUID.fromString(Files.getNameWithoutExtension(playerDataFile.getName())))
+                    .onFailure(ex -> issuer.sendError("Skipping player data file due to invalid UUID: " + playerDataFile.getName()))
+                    .flatMap(playerUUID -> playerDataExtractor.readPlayerDataFromFile(playerDataFile)
+                            .mapTry(profileData -> applyToRelevantProfiles(world, profileData, playerUUID, groupsForWorld))
+                            .peek(future -> future
+                                    .thenRun(successCount::incrementAndGet)
+                                    .exceptionally(ex -> {
+                                        issuer.sendError("Failed to import player data for UUID " + playerUUID + ": " + ex.getMessage());
+                                        errorCount.incrementAndGet();
+                                        return null;
+                                    })))
+                    .onFailure(ex -> errorCount.incrementAndGet())
                     .onSuccess(playerDataFutures::add);
         }
         CompletableFuture.allOf(playerDataFutures.toArray(new CompletableFuture[0]))
-                .thenRun(() -> issuer.sendMessage("Successfully imported all player data from " + world.getName() + "."));
+                .thenRun(() -> {
+                    issuer.sendMessage("Successfully imported " + successCount.get() + " player data from '" + world.getName() + "' world.");
+                    if (errorCount.get() > 0) {
+                        issuer.sendError("Failed to import " + errorCount.get() + " player data files. Check the logs for details.");
+                    }
+                });
     }
 
     private @NonNull CompletableFuture<Void> applyToRelevantProfiles(World world, ProfileData profileData, UUID playerUUID, List<WorldGroup> groupsForWorld) {
