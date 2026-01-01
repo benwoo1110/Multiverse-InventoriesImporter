@@ -48,7 +48,7 @@ dependencies {
     runtimeOnly(project(":playerdata_1_18_2", configuration = "reobf"))
     runtimeOnly(project(":playerdata_1_20_2", configuration = "reobf"))
     runtimeOnly(project(":playerdata_1_21_4", configuration = "reobf"))
-    runtimeOnly(project(":playerdata_1_21_10", configuration = "reobf"))
+    runtimeOnly(project(":playerdata_1_21_10"))
 
     // hk2 annotations
     compileOnly("org.glassfish.hk2:hk2-api:3.1.1") {
