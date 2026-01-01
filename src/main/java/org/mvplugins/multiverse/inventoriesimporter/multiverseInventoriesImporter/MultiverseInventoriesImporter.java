@@ -1,6 +1,7 @@
 package org.mvplugins.multiverse.inventoriesimporter.multiverseInventoriesImporter;
 
 import org.jvnet.hk2.annotations.Service;
+import org.mvplugins.multiverse.core.command.MVCommandManager;
 import org.mvplugins.multiverse.core.inject.PluginServiceLocator;
 import org.mvplugins.multiverse.core.inject.PluginServiceLocatorFactory;
 import org.mvplugins.multiverse.core.module.MultiverseModule;
@@ -19,9 +20,25 @@ public final class MultiverseInventoriesImporter extends MultiverseModule {
     @Inject
     private Provider<DataImportManager> dataImportManager;
 
+    @Inject
+    private Provider<MVCommandManager> mvcCommandManager;
+
     @Override
     public void onEnable() {
         initializeDependencyInjection(new MultiverseInventoriesImporterPluginBinder(this));
+        getLogger().info("Multiverse Inventories Importer registering commands and data importers...");
+
+        // Unregister the existing Multiverse Inventories import command if it exists
+        mvcCommandManager.get().getRegisteredRootCommands()
+                .stream()
+                .filter(command -> command.getCommandName().equals("mvinv"))
+                .findAny()
+                .flatMap(command -> command.getChildren()
+                        .stream()
+                        .filter(child -> child.getClass().getName().equals("org.mvplugins.multiverse.inventories.commands.PlayerDataImportCommand"))
+                        .findAny())
+                .ifPresent(child -> mvcCommandManager.get().unregisterCommand(child));
+
         registerCommands(MVInvImporterCommand.class);
         serviceLocator.getAllServices(DataImporter.class)
                 .forEach(dataImporter -> dataImportManager.get().register(dataImporter));
