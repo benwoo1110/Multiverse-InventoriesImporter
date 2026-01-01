@@ -120,7 +120,7 @@ public class PlayerDataImporter_1_21_10 implements PlayerDataImporter {
             return null;
         }
         CompoundTag itemStackDataCopy = itemStackData.copy();
-        itemStackDataCopy.remove("Slot");
+        // itemStackDataCopy.remove("Slot");
         itemStackDataCopy.putInt("DataVersion", dataVersion);
         return Try.of(() -> {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
