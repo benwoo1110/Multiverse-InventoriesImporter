@@ -15,6 +15,7 @@ import me.ebonjaeger.perworldinventory.serialization.PlayerSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -239,14 +240,18 @@ final class PwiImportHelper {
         try {
             JSONParser parser = new JSONParser(JSONParser.USE_INTEGER_STORAGE);
             JSONObject jsonObject = (JSONObject) parser.parse(new FileInputStream(pwiPlayerDataFile));
+
             if (jsonObject.containsKey("==")) {
                 pwiPlayerProfile = (me.ebonjaeger.perworldinventory.data.PlayerProfile) SerializationHelper.deserialize(jsonObject, true);
             } else {
                 // Use legacy serialization that doesn't use ConfigurationSerializable
+                String playerName = Objects.requireNonNullElse(offlinePlayer.getName(), offlinePlayer.getUniqueId().toString());
+                // data-format v3 used getContents() which includes armor (36-39) and
+                // off-hand (40) in the main inventory array. Expect 41 slots.
                 pwiPlayerProfile = PlayerSerializer.INSTANCE.deserialize(
                         jsonObject,
-                        Objects.requireNonNull(offlinePlayer.getName()),
-                        PlayerStats.INVENTORY_SIZE,
+                        playerName,
+                        41,
                         PlayerStats.ENDER_CHEST_SIZE);
             }
         } catch (Exception e) {
@@ -291,7 +296,16 @@ final class PwiImportHelper {
         // Shares that are not available are commented out.
         if (pwiSettings.getProperty(PlayerSettings.LOAD_INVENTORY)) {
             mvPlayerProfile.set(Sharables.ARMOR, pwiPlayerProfile.getArmor());
-            mvPlayerProfile.set(Sharables.INVENTORY, pwiPlayerProfile.getInventory());
+
+            ItemStack[] fullInv = pwiPlayerProfile.getInventory();
+            if (fullInv.length > PlayerStats.INVENTORY_SIZE) {
+                // data-format v3 uses 41 slots. Slot 40 is the off-hand item.
+                ItemStack offHand = fullInv[40];
+                mvPlayerProfile.set(Sharables.OFF_HAND, offHand);
+                mvPlayerProfile.set(Sharables.INVENTORY, Arrays.copyOf(fullInv, PlayerStats.INVENTORY_SIZE));
+            } else {
+                mvPlayerProfile.set(Sharables.INVENTORY, fullInv);
+            }
         }
         if (pwiSettings.getProperty(PlayerSettings.USE_ECONOMY)) {
             mvPlayerProfile.set(Sharables.ECONOMY, pwiPlayerProfile.getBalance());
@@ -334,7 +348,7 @@ final class PwiImportHelper {
             mvPlayerProfile.set(Sharables.REMAINING_AIR, pwiPlayerProfile.getRemainingAir());
         }
         if (pwiSettings.getProperty(PlayerSettings.LOAD_SATURATION)) {
-            mvPlayerProfile.set(Sharables.REMAINING_AIR, pwiPlayerProfile.getRemainingAir());
+            mvPlayerProfile.set(Sharables.SATURATION, pwiPlayerProfile.getSaturation());
         }
         // if (pwiSettings.getProperty(PlayerSettings.LOAD_DISPLAY_NAME)) {
         //     mvPlayerProfile.set(Sharables, pwiPlayerProfile.getDisplayName());
